@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alapműveleti teszt</title>
+  <style>
+
+    table {
+      border: none;
+      border-collapse: collapse; 
+      table-layout: fixed;
+      width: 100%;  
+      margin-top: 1cm;
+      /*margin: 1cm;*/
+    } 
+     
+    th,td {
+      border: none; /* 1px solid; */
+      font-size:  18pt;
+      font-family: Arial;
+      height:  28pt;
+    }
+
+  </style>  
+</head>
+<body>
+
+  <table id='table' />
+
+  <script>
+
+    function get_random_triangle_item(height) {
+      // Return with a random (row, col) 0-based coordinate pair in a triangle, so that row < height
+      
+      let max_index = height * (height + 1) / 2
+      let i = Math.floor(Math.random() * max_index);
+      let row = Math.floor(-0.5 + Math.sqrt(0.25 + 2.0 * i));
+      let col = i - row * (row + 1) / 2
+      return {row, col}
+    }
+
+    function get_random_triplet() {
+      // Return with a,b,c, where: min_num <= a, b <= c <= max_num and a + b = c
+      const min_num = 2; // ELiminate 0s and 1s from a and b 
+      const max_num = 20;
+
+      let {row, col} = get_random_triangle_item(max_num + 1 - min_num * 2)
+      let c = row + min_num * 2
+      let a = col + min_num
+      let b = c - a
+      return [a, b, c]
+    }
+
+    function get_10s_overflow() {
+      let {row, col} = get_random_triangle_item(8)
+      let c = 18 - row
+      let a = 9 - col
+      let b = c - a
+      return [a, b, c]
+    }
+
+    function get_operation(x, y) {
+      let a, b, c, ten;
+      // 50% chance of "tizes atlepes"
+      if (Math.random() < 0.5) {
+        [a, b, c] = get_random_triplet()  
+        ten = false;
+      } else {
+        [a, b, c] = get_10s_overflow()  
+        ten = true;
+      }
+      
+      if (x < 2) {
+        return `${a} + ${b} =   `
+      } else {
+        return `${c} - ${a} =   `
+      }
+    }
+
+    var tbl = document.getElementById('table')
+    for (let i = 0; i < 25; i++) {
+      const tr = tbl.insertRow();
+      for (let j = 0; j < 4; j++) {
+          const td = tr.insertCell();
+          td.appendChild(document.createTextNode(get_operation(j, i)));
+      }
+    }
+
+
+  </script>  
+
+</body>
+</html>
