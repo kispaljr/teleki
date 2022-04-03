@@ -22,56 +22,88 @@
       height:  28pt;
     }
 
-  </style>  
+  </style>
 </head>
+
 <body>
 
   <table id='table' />
-
+  <script src="https://randojs.com/2.0.0.js"></script>  
   <script>
 
-    function get_random_triangle_item(height) {
-      // Return with a random (row, col) 0-based coordinate pair in a triangle, so that row < height
-      
-      let max_index = height * (height + 1) / 2
-      let i = Math.floor(Math.random() * max_index);
-      let row = Math.floor(-0.5 + Math.sqrt(0.25 + 2.0 * i));
-      let col = i - row * (row + 1) / 2
-      return {row, col}
+
+    const min_num = 2; 
+    const max_num = 20;
+    var mixed_operations = true;
+
+
+    const url_params = new URLSearchParams(window.location.search);
+    const mixed_param = url_params.get('mixed');
+    mixed_operations = (mixed_param != null) && (mixed_param != 0);
+
+    // generates random coordinates in a (lower) triangular matrix without repetition.
+    class RandomTrianglePos {
+      constructor(triangle_height) {
+          this.pregenerated_indexes = randoSequence(triangle_height * (triangle_height + 1) / 2 - 1);
+          this.next_ii = 0; // next index in the pregenerated_indexes array
+      }
+
+      // returns with a random 0-based (row, col) coordinate pair, so that 0 <= col <= row < triangle_height
+      next() {
+          let ii = this.next_ii;
+          this.next_ii = (this.next_ii + 1) % this.pregenerated_indexes.length;
+          
+          let i = this.pregenerated_indexes[ii];
+          let row = Math.floor(-0.5 + Math.sqrt(0.25 + 2.0 * i));
+          let col = i - row * (row + 1) / 2;
+          return {row, col}
+      }
     }
 
-    function get_random_triplet() {
-      // Return with a,b,c, where: min_num <= a, b <= c <= max_num and a + b = c
-      const min_num = 2; // ELiminate 0s and 1s from a and b 
-      const max_num = 20;
+    var crossing_10_addition_coordinates = new RandomTrianglePos(8)
+    var crossing_10_subtraction_coordinates = new RandomTrianglePos(8)
+    var generic_op_coordinates = new RandomTrianglePos(max_num + 1 - min_num * 2);  
 
-      let {row, col} = get_random_triangle_item(max_num + 1 - min_num * 2)
+    // Return with a,b,c, so that: min_num <= a, b <= c <= max_num and a + b = c
+    function get_operands(coordinates) {
+      let {row, col} = coordinates
       let c = row + min_num * 2
       let a = col + min_num
       let b = c - a
-      return [a, b, c]
+      return {a, b, c}
     }
 
-    function get_10s_overflow() {
-      let {row, col} = get_random_triangle_item(8)
+    // "tizes atlepes"
+    function get_crossing_10_operands(coordinates) {
+      let {row, col} = coordinates
       let c = 18 - row
       let a = 9 - col
       let b = c - a
-      return [a, b, c]
+      return {a, b, c}
     }
 
     function get_operation(x, y) {
-      let a, b, c, ten;
-      // 50% chance of "tizes atlepes"
-      if (Math.random() < 0.5) {
-        [a, b, c] = get_random_triplet()  
-        ten = false;
+      // incerase the chance of "tizes atlepes"
+      const forced_crossing_10_chance = 0.4;
+      let is_add = (x < 2);
+      if (mixed_operations) {
+        is_add = Math.random() < 0.5;
+      }
+
+
+      if (Math.random() < forced_crossing_10_chance) {
+        let pos;
+        if (is_add) {
+          pos = crossing_10_addition_coordinates.next();
+        } else {
+          pos = crossing_10_subtraction_coordinates.next();
+        }
+        var {a, b, c} = get_crossing_10_operands(pos);
       } else {
-        [a, b, c] = get_10s_overflow()  
-        ten = true;
+        var {a, b, c} = get_operands(generic_op_coordinates.next());
       }
       
-      if (x < 2) {
+      if (is_add) {
         return `${a} + ${b} =   `
       } else {
         return `${c} - ${a} =   `
