@@ -30,82 +30,80 @@
   <table id='table' />
   <script src="https://randojs.com/2.0.0.js"></script>  
   <script>
-
-
     const min_num = 2; 
     const max_num = 20;
-    var mixed_operations = true;
-
 
     const url_params = new URLSearchParams(window.location.search);
     const mixed_param = url_params.get('mixed');
-    mixed_operations = (mixed_param != null) && (mixed_param != 0);
+    var mixed_operations = (mixed_param != null) && (mixed_param != 0);
 
-    // generates random coordinates in a (lower) triangular matrix without repetition.
-    class RandomTrianglePos {
-      constructor(triangle_height) {
-          this.pregenerated_indexes = randoSequence(triangle_height * (triangle_height + 1) / 2 - 1);
-          this.next_ii = 0; // next index in the pregenerated_indexes array
+
+    // NOTE: the number of all possible operations is quite small (231 for all possibilities, and 190: if you exclude 0 and 1)
+    // this makes pregenerating all possible combinations viable
+    var crossing_10s, not_crossing_10s;
+    {
+      // a,b,c, so that: min_num <= a, b <= c <= max_num and a + b = c
+      let a, b, c;
+      crossing_10s = [];
+      not_crossing_10s = [];
+      for (c = 2 * min_num; c <= max_num; c++) {
+        for (a = min_num; a <= c - min_num; a++) {
+          b = c - a;
+          if ((a < 10) && (b < 10) && (c > 10)) {
+            crossing_10s.push({a, b, c});
+          } else {
+            not_crossing_10s.push({a, b, c});
+          }
+        }
+      }
+    }
+
+    // returns the elements of a sequence in a random order
+    class InRandomOrder {
+      constructor(sequence) {
+          this.sequence = randoSequence(sequence);
+          this.next_i = 0; // next index in the sequence
       }
 
-      // returns with a random 0-based (row, col) coordinate pair, so that 0 <= col <= row < triangle_height
       next() {
-          let ii = this.next_ii;
-          this.next_ii = (this.next_ii + 1) % this.pregenerated_indexes.length;
-          
-          let i = this.pregenerated_indexes[ii];
-          let row = Math.floor(-0.5 + Math.sqrt(0.25 + 2.0 * i));
-          let col = i - row * (row + 1) / 2;
-          return {row, col}
+          let i = this.next_i;
+          this.next_i = (this.next_i + 1) % this.sequence.length;
+          return this.sequence[i].value;
       }
     }
 
-    var crossing_10_addition_coordinates = new RandomTrianglePos(8)
-    var crossing_10_subtraction_coordinates = new RandomTrianglePos(8)
-    var generic_op_coordinates = new RandomTrianglePos(max_num + 1 - min_num * 2);  
+    var crossing_10_addition = new InRandomOrder(crossing_10s)
+    var crossing_10_subtraction = new InRandomOrder(crossing_10s)
+    var not_crossing_10_addition = new InRandomOrder(not_crossing_10s)
+    var not_crossing_10_subtraction = new InRandomOrder(not_crossing_10s)
 
-    // Return with a,b,c, so that: min_num <= a, b <= c <= max_num and a + b = c
-    function get_operands(coordinates) {
-      let {row, col} = coordinates
-      let c = row + min_num * 2
-      let a = col + min_num
-      let b = c - a
-      return {a, b, c}
-    }
 
-    // "tizes atlepes"
-    function get_crossing_10_operands(coordinates) {
-      let {row, col} = coordinates
-      let c = 18 - row
-      let a = 9 - col
-      let b = c - a
-      return {a, b, c}
-    }
 
     function get_operation(x, y) {
       // incerase the chance of "tizes atlepes"
-      const forced_crossing_10_chance = 0.4;
-      let is_add = (x < 2);
+      const crossing_10_chance_add = 0.5;
+      const crossing_10_chance_sub = 0.0;
       if (mixed_operations) {
-        is_add = Math.random() < 0.5;
-      }
-
-
-      if (Math.random() < forced_crossing_10_chance) {
-        let pos;
-        if (is_add) {
-          pos = crossing_10_addition_coordinates.next();
-        } else {
-          pos = crossing_10_subtraction_coordinates.next();
-        }
-        var {a, b, c} = get_crossing_10_operands(pos);
+        var is_add = Math.random() < 0.5;
       } else {
-        var {a, b, c} = get_operands(generic_op_coordinates.next());
+        var is_add = (x < 2);
       }
-      
+
       if (is_add) {
+        if (Math.random() < crossing_10_chance_add) {
+          var {a, b, c} = crossing_10_addition.next();
+        } else {
+          var {a, b, c} = not_crossing_10_addition.next();
+        }
         return `${a} + ${b} =   `
       } else {
+        if (Math.random() < crossing_10_chance_sub) {
+          var {a, b, c} = crossing_10_subtraction.next();
+        } else {
+          do {
+            var {a, b, c} = not_crossing_10_subtraction.next();
+          } while ((c == 20) && (a > 10));
+        }
         return `${c} - ${a} =   `
       }
     }
