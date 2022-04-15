@@ -46,8 +46,7 @@
   <script>
     const min_num = 2; 
     const max_num = 20;
-    const crossing_10_chance_add = 0.5;
-    const crossing_10_chance_sub = 0.5;
+    const column_cnt = 4;
 
     // NOTE: the number of all possible operations is quite small (231 for all possibilities, and only 190: if you exclude 0 and 1)
     // this makes pregenerating all possible combinations viable
@@ -86,10 +85,10 @@
 
     // Common base class for generating random additions and subtractions
     class AddSub {
-      constructor(crossing_10_chance) {
+      constructor() {
         this.operands_crossing_10 = new InRandomOrder(crossing_10s);
         this.operands_not_crossing_10 = new InRandomOrder(not_crossing_10s);
-        this.crossing_10_chance = crossing_10_chance;
+        this.crossing_10_ratio = get_float_input(this.short_name + "_10crossings_ratio") / 100.0; 
       }
 
       filter(a, b, c) {
@@ -99,7 +98,7 @@
       // returns the next random operation
       next() {
           do {
-            if (Math.random() < this.crossing_10_chance) {
+            if (Math.random() < this.crossing_10_ratio) {
               var {a, b, c} = this.operands_crossing_10.next();
             } else {
               var {a, b, c} = this.operands_not_crossing_10.next();
@@ -134,8 +133,16 @@
 
     // Generates the next random operation in a column
     class Column {
-      constructor(op_generators) {
-        this.op_generators = op_generators;
+      constructor(x, all_op_generators) {
+        this.op_generators = all_op_generators.filter(
+          op => {
+            return document.getElementById(`${op.short_name}_${x + 1}`).checked;
+          }
+        );
+
+        if (!this.op_generators.length) {
+          this.op_generators = all_op_generators.slice();
+        }
       }
 
       next() {
@@ -143,33 +150,77 @@
       }
     }
 
+    // save the value of an input field to cookie
+    function save_field(id) {
+      let element = document.getElementById(id);
+      if (element.matches('input[type="checkbox"]')) {
+        var field_value = element.checked;
+      } else {
+        var field_value = escape(element.value);
+      }
+      document.cookie = id + "=" + field_value;
+    }
+
+    // load the value of an input field from cookie
+    function load_field(id) {
+      const value = ('; '+document.cookie).split(`; ${id}=`).pop().split(';')[0]; 
+      if (value != "") {
+        // console.log(`${id}=${value}`);
+        let element = document.getElementById(id);
+        if (element.matches('input[type="checkbox"]')) {
+          element.checked = (value === "true");
+        } else {
+          element.value = value; 
+        }
+      }
+    }
+
+    // iterator of all the valid "setting" input field IDs
+    function* field_names() {
+      for (let op of ["add", "sub"]) {
+        yield `${op}_10crossings_ratio`;
+        for (let x = 0; x < column_cnt; x++) {
+          yield `${op}_${x + 1}`;
+        }
+      }
+    }
+
+    // save all settings to cookie
+    function save_settings() {
+      for (let field of field_names()) {
+        save_field(field);
+      }
+      // console.log("cookie: " + document.cookie);      
+    }
+
+    // load all settings from cookie
+    function load_settings() {
+      for (let field of field_names()) {
+        load_field(field);
+      }
+    }
+
+    function get_float_input(id) {
+      let element = document.getElementById(id);
+      let val = parseFloat(document.getElementById(id).value);
+      if (isNaN(val)) {
+        val = 0.0;
+        element.value = 0;
+      }
+      return val;
+    }
 
     function rebuild_table() {
-      // parse 10-crossing settings
-
-      let a = document.getElementById("add_10crossings_ratio").value;
-      let add_10crossings_ratio = parseFloat(document.getElementById("add_10crossings_ratio").value) / 100.0;
-      let sub_10crossings_ratio = parseFloat(document.getElementById("sub_10crossings_ratio").value) / 100.0;
-
-      var all_op_generators = [
-        new Addition(add_10crossings_ratio),
-        new Subtraction(sub_10crossings_ratio)
+      var op_generators = [
+        new Addition(),
+        new Subtraction()
       ];
+      save_settings();
 
       // collect operation generators for each column
       let columns = [];
-      for (let x = 0; x < 4; x++) {
-        let op_gens = [];
-        for (let i = 0; i < all_op_generators.length; i++) {
-          var cb = document.getElementById(`${all_op_generators[i].short_name}_${x + 1}`);
-          if (cb.checked) {
-            op_gens.push(all_op_generators[i]);
-          }
-        }
-        if (!op_gens.length) {
-          op_gens = all_op_generators.slice();
-        }
-        columns.push(new Column(op_gens));
+      for (let x = 0; x < column_cnt; x++) {
+        columns.push(new Column(x, op_generators));
       }
 
       // rewrite the table of operations
@@ -177,7 +228,7 @@
       tbl.innerHTML = '';
       for (let y = 0; y < 25; y++) {
         const tr = tbl.insertRow();
-        for (let x = 0; x < 4; x++) {
+        for (let x = 0; x < column_cnt; x++) {
             const td = tr.insertCell();
             td.appendChild(document.createTextNode(columns[x].next()));
         }
@@ -187,12 +238,12 @@
   </script>  
 </head>
 
-<body onload="rebuild_table()">
+<body onload="load_settings(); rebuild_table()">
   <div class="settings">
     <p>Az alábbi beállításokkal tudod befolyásolni, hogy milyen teszt készüljön. Ha a beállítások megvátoztatása után nem készít magától új feldatlapot, akkor nyomd meg az "Újat kérek!" gombot.<br/>
     Ha készen vagy, egyszerűen nyomtasd ki ezt az oldalt a böngésződből (általában Ctrl+P). A beállító gombok a papíron már nem fognak látszani.
     </p>
-
+    <p>Ha hibát találtok, kérésetek vagy kérdésetek van Viberen és emailben elértek.</p>
 
 
     <p>
