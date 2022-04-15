@@ -22,30 +22,42 @@
       height:  28pt;
     }
 
+    @media screen {
+      td.settings {
+        font-size:  12pt;
+        height:  auto;
+      }
+
+      div.settings {
+        border: 1px solid;
+        padding: 10px;
+
+      }
+    }
+
+    @media print {
+      .settings {
+        display: none;
+      }
+    }
+
   </style>
-</head>
-
-<body>
-
-  <table id='table' />
   <script src="https://randojs.com/2.0.0.js"></script>  
   <script>
     const min_num = 2; 
     const max_num = 20;
+    const crossing_10_chance_add = 0.5;
+    const crossing_10_chance_sub = 0.5;
 
     const url_params = new URLSearchParams(window.location.search);
-    const mixed_param = url_params.get('mixed');
-    var mixed_operations = (mixed_param != null) && (mixed_param != 0);
 
-
-    // NOTE: the number of all possible operations is quite small (231 for all possibilities, and 190: if you exclude 0 and 1)
+    // NOTE: the number of all possible operations is quite small (231 for all possibilities, and only 190: if you exclude 0 and 1)
     // this makes pregenerating all possible combinations viable
-    var crossing_10s, not_crossing_10s;
-    {
+    function precompute_operands() {
       // a,b,c, so that: min_num <= a, b <= c <= max_num and a + b = c
       let a, b, c;
-      crossing_10s = [];
-      not_crossing_10s = [];
+      let crossing_10s = [];
+      let not_crossing_10s = [];
       for (c = 2 * min_num; c <= max_num; c++) {
         for (a = min_num; a <= c - min_num; a++) {
           b = c - a;
@@ -56,9 +68,11 @@
           }
         }
       }
+      return {crossing_10s, not_crossing_10s}
     }
+    var {crossing_10s, not_crossing_10s} = precompute_operands();
 
-    // returns the elements of a sequence in a random order
+    // returns the elements of a sequence in a random order 
     class InRandomOrder {
       constructor(sequence) {
           this.sequence = randoSequence(sequence);
@@ -72,53 +86,174 @@
       }
     }
 
-    var crossing_10_addition = new InRandomOrder(crossing_10s)
-    var crossing_10_subtraction = new InRandomOrder(crossing_10s)
-    var not_crossing_10_addition = new InRandomOrder(not_crossing_10s)
-    var not_crossing_10_subtraction = new InRandomOrder(not_crossing_10s)
-
-
-
-    function get_operation(x, y) {
-      // incerase the chance of "tizes atlepes"
-      const crossing_10_chance_add = 0.5;
-      const crossing_10_chance_sub = 0.0;
-      if (mixed_operations) {
-        var is_add = Math.random() < 0.5;
-      } else {
-        var is_add = (x < 2);
+    class AddSub {
+      constructor(crossing_10_chance) {
+        this.operands_crossing_10 = new InRandomOrder(crossing_10s);
+        this.operands_not_crossing_10 = new InRandomOrder(not_crossing_10s);
+        this.crossing_10_chance = crossing_10_chance;
       }
 
-      if (is_add) {
-        if (Math.random() < crossing_10_chance_add) {
-          var {a, b, c} = crossing_10_addition.next();
-        } else {
-          var {a, b, c} = not_crossing_10_addition.next();
-        }
-        return `${a} + ${b} =   `
-      } else {
-        if (Math.random() < crossing_10_chance_sub) {
-          var {a, b, c} = crossing_10_subtraction.next();
-        } else {
+      filter(a, b, c) {
+        return true
+      }
+
+      next() {
           do {
-            var {a, b, c} = not_crossing_10_subtraction.next();
-          } while ((c == 20) && (a > 10));
+            if (Math.random() < this.crossing_10_chance) {
+              var {a, b, c} = this.operands_crossing_10.next();
+            } else {
+              var {a, b, c} = this.operands_not_crossing_10.next();
+            }
+          } while (! this.filter(a, b, c));
+          return this.to_string(a, b, c);
+      }
+    }
+
+    class Addition extends AddSub {
+      to_string(a, b, c) {
+          return `${a} + ${b} =   `
+      }
+    }
+
+    class Subtraction extends AddSub {
+      filter(a, b, c) {
+        // filter out things like 20-13 that is tecnically not a "10 crossing", but...
+        return !((c == 20) && (a > 10));
+      }
+
+      to_string(a, b, c) {
+          return `${c} - ${a} =   `
+      }
+    }
+
+    class Column {
+      constructor(ops) {
+        this.ops = ops;
+      }
+
+      next() {
+        return rando(this.ops).value.next();
+      }
+    }
+
+
+    function rebuild_table() {
+      var add = new Addition(crossing_10_chance_add);
+      var sub = new Subtraction(crossing_10_chance_sub)
+
+      var columns = [ new Column([add]), 
+                      new Column([sub]), 
+                      new Column([add, sub]), 
+                      new Column([sub, add])];
+
+      function get_operation(x, y) {
+        return columns[x].next();
+      }
+
+      var tbl = document.getElementById('operations')
+      tbl.innerHTML = '';
+      for (let i = 0; i < 25; i++) {
+        const tr = tbl.insertRow();
+        for (let j = 0; j < 4; j++) {
+            const td = tr.insertCell();
+            td.appendChild(document.createTextNode(get_operation(j, i)));
         }
-        return `${c} - ${a} =   `
       }
     }
-
-    var tbl = document.getElementById('table')
-    for (let i = 0; i < 25; i++) {
-      const tr = tbl.insertRow();
-      for (let j = 0; j < 4; j++) {
-          const td = tr.insertCell();
-          td.appendChild(document.createTextNode(get_operation(j, i)));
-      }
-    }
-
 
   </script>  
+</head>
+
+<body onload="rebuild_table()">
+  <div class="settings">
+    <label for="add_10crossings_ratio" >Tízes átlépések aránya az összeadásokban: </label>
+    <input type="number" id="add_10crossings_ratio" name="add_10crossings_ratio" min="0" max="100" value="50" size="5"/>%
+    (0 esetén egyáltalán nem lesz tízes átlépés)
+    <br/>
+    
+    <label for="sub_10crossings_ratio" >Tízes átlépések aránya a kivonásokban: </label>
+    <input type="number" id="sub_10crossings_ratio" name="sub_10crossings_ratio" min="0" max="100" value="0" size="5"/>%
+    (0 esetén egyáltalán nem lesz tízes átlépés)
+    <br/>
+    <table>
+      <tr>
+        <td class="settings">
+          <input type="checkbox" id="add_1" name="add_1" onclick="rebuild_table()" checked="true" />
+          <label for="add_1" >Összeadások</label>
+        </td>
+        <td class="settings">
+          <input type="checkbox" id="add_2" name="add_2" />
+          <label for="add_2" >Összeadások</label>
+        </td>
+        <td class="settings">
+          <input type="checkbox" id="add_3" name="add_3" checked="true" />
+          <label for="add_3" >Összeadások</label>
+        </td>
+        <td class="settings">
+          <input type="checkbox" id="add_4" name="add_4" checked="true" />
+          <label for="add_4" >Összeadások</label>
+        </td>
+      </tr>
+      <tr>
+        <td class="settings">
+          <input type="checkbox" id="sub_1" name="sub_1" />
+          <label for="sub_1" >Kivonások</label>
+        </td>
+        <td class="settings">
+          <input type="checkbox" id="sub_2" name="sub_2" checked="true" />
+          <label for="sub_2" >Kivonások</label>
+        </td>
+        <td class="settings">
+          <input type="checkbox" id="sub_3" name="sub_3" checked="true" />
+          <label for="sub_3" >Kivonások</label>
+        </td>
+        <td class="settings">
+          <input type="checkbox" id="sub_4" name="sub_4" checked="true" />
+          <label for="sub_4" >Kivonások</label>
+        </td>
+      </tr>
+      <tr>
+        <td class="settings">
+          <input type="checkbox" id="mul_1" name="mul_1" checked="false" disabled="true"/>
+          <label for="mul_1" >Szorzások</label>
+        </td>
+        <td class="settings">
+          <input type="checkbox" id="mul_2" name="mul_2" checked="false" disabled="true"/>
+          <label for="mul_2" >Szorzások</label>
+        </td>
+        <td class="settings">
+          <input type="checkbox" id="mul_3" name="mul_3" checked="false" disabled="true"/>
+          <label for="mul_3" >Szorzások</label>
+        </td>
+        <td class="settings">
+          <input type="checkbox" id="mul_4" name="mul_4" checked="false" disabled="true"/>
+          <label for="mul_4" >Szorzások</label>
+        </td>
+      </tr>
+      <tr>
+        <td class="settings">
+          <input type="checkbox" id="div_1" name="div_1" checked="false" disabled="true"/>
+          <label for="div_1" >Osztások</label>
+        </td>
+        <td class="settings">
+          <input type="checkbox" id="div_2" name="div_2" checked="false" disabled="true"/>
+          <label for="div_2" >Osztások</label>
+        </td>
+        <td class="settings">
+          <input type="checkbox" id="div_3" name="div_3" checked="false" disabled="true"/>
+          <label for="div_3" >Osztások</label>
+        </td>
+        <td class="settings">
+          <input type="checkbox" id="div_4" name="div_4" checked="false" disabled="true"/>
+          <label for="div_4" >Osztások</label>
+        </td>
+      </tr>
+    </table>
+
+  </div>
+
+
+  <table id='operations' />
 
 </body>
 </html>
