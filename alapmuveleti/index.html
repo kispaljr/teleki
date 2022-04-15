@@ -47,6 +47,7 @@
     const min_num = 2; 
     const max_num = 20;
     const column_cnt = 4;
+    var cookie_expiry = new Date(new Date().getTime() + 10 * 365 * 24 * 3600 * 1000);
 
     // NOTE: the number of all possible operations is quite small (231 for all possibilities, and only 190: if you exclude 0 and 1)
     // this makes pregenerating all possible combinations viable
@@ -158,7 +159,7 @@
       } else {
         var field_value = escape(element.value);
       }
-      document.cookie = id + "=" + field_value;
+      document.cookie = `${id}=${field_value}; expires=${cookie_expiry.toGMTString()}`;
     }
 
     // load the value of an input field from cookie
