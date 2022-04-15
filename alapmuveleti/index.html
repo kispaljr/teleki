@@ -23,16 +23,25 @@
     }
 
     @media screen {
-      td.settings {
-        font-size:  12pt;
-        height:  auto;
+
+      .settings {
+        font-size:  14pt;
+        font-family: Arial;
+        margin: 0;
       }
 
       div.settings {
         border: 1px solid;
         padding: 10px;
-
       }
+
+      table.settings td,th {
+        height:  auto;
+        text-align: left;
+        font-size:  14pt;
+        font-family: Arial;
+      }
+
     }
 
     @media print {
@@ -212,17 +221,21 @@
     }
 
     function rebuild_table() {
+      // create a generator for all valid operations
       var op_generators = [
         new Addition(),
         new Subtraction()
       ];
-      save_settings();
 
       // collect operation generators for each column
       let columns = [];
       for (let x = 0; x < column_cnt; x++) {
         columns.push(new Column(x, op_generators));
       }
+
+      // save settings to cookie
+      // NOTE: the lines above can actually modify the settings
+      save_settings();
 
       // rewrite the table of operations
       var tbl = document.getElementById('operations');
@@ -241,97 +254,113 @@
 
 <body onload="load_settings(); rebuild_table()">
   <div class="settings">
-    <p>Az alábbi beállításokkal tudod befolyásolni, hogy milyen teszt készüljön. Ha a beállítások megvátoztatása után nem készít magától új feldatlapot, akkor nyomd meg az "Újat kérek!" gombot.<br/>
+    <p>Az alábbi beállításokkal tudod befolyásolni, hogy milyen teszt készüljön. Ha a beállítások megvátoztatása után nem készít magától új feladatlapot, akkor nyomd meg az "Újat kérek!" gombot.<br/>
     Ha készen vagy, egyszerűen nyomtasd ki ezt az oldalt a böngésződből (általában Ctrl+P). A beállító gombok a papíron már nem fognak látszani.
     </p>
-    <p>Ha hibát találtok, kérésetek vagy kérdésetek van Viberen és emailben elértek.</p>
-
-
+    <p>Ha hibát találtok, kérésetek vagy kérdésetek van, Viberen és emailben elértek.</p>
     <p>
-      <input type="button" id="recalc" name="recalc" value="Újat kérek!" onclick="rebuild_table()" />
-    </p>
-    <p>
-      <label for="add_10crossings_ratio" >Tízes átlépések aránya az összeadásokban: </label>
-      <input type="number" id="add_10crossings_ratio" name="add_10crossings_ratio" min="0" max="100" value="50" size="3" onchange="rebuild_table()"/>%
-      (0 esetén egyáltalán nem lesz tízes átlépés)
-    </p>
-    <p>
-      <label for="sub_10crossings_ratio" >Tízes átlépések aránya a kivonásokban: </label>
-      <input type="number" id="sub_10crossings_ratio" name="sub_10crossings_ratio" min="0" max="100" value="50" size="3" onchange="rebuild_table()"/>%
-      (0 esetén egyáltalán nem lesz tízes átlépés)
+      <input class="settings" type="button" id="recalc" name="recalc" value="Újat kérek!" onclick="rebuild_table()" />
     </p>
 
-    <table>
+    <table class="settings" style="width: auto;">
       <tr>
-        <td class="settings">
+        <th class="settings">
+          <label for="add_10crossings_ratio" >Tízes átlépések aránya az összeadásokban: &nbsp;</label>
+        </th>
+        <td class="settings" nowrap="true">
+          <input type="number" id="add_10crossings_ratio" name="add_10crossings_ratio" min="0" max="100" value="50" size="3" onchange="rebuild_table()"/>% &nbsp;
+        </td>
+        <td>
+          (0 esetén egyáltalán nem lesz tízes átlépés)
+        </td>
+      </tr>
+      <tr>
+        <th class="settings">
+          <label for="sub_10crossings_ratio" >Tízes átlépések aránya a kivonásokban: &nbsp;</label>
+        </th>
+        <td class="settings" nowrap="true">
+          <input type="number" id="sub_10crossings_ratio" name="sub_10crossings_ratio" min="0" max="100" value="50" size="3" onchange="rebuild_table()"/>% &nbsp;
+        </td>
+        <td>
+          (0 esetén egyáltalán nem lesz tízes átlépés)
+        </td>
+      </tr>
+    </table>
+
+    <table class="settings">
+      <tr>
+        <th colspan="4" style="padding-bottom: 10px;padding-top: 15px;">Művelettípusok kiválasztása oszloponként (egyszerre több is választható):</td>
+      </tr>
+      <tr>
+        <td>
           <input type="checkbox" id="add_1" name="add_1" checked="true" onclick="rebuild_table()" />
-          <label for="add_1" >Összeadások</label>
+          <label for="add_1" >Összeadás</label>
         </td>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="add_2" name="add_2" onclick="rebuild_table()" />
-          <label for="add_2" >Összeadások</label>
+          <label for="add_2" >Összeadás</label>
         </td>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="add_3" name="add_3" checked="true" onclick="rebuild_table()" />
-          <label for="add_3" >Összeadások</label>
+          <label for="add_3" >Összeadás</label>
         </td>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="add_4" name="add_4" checked="true" onclick="rebuild_table()" />
-          <label for="add_4" >Összeadások</label>
+          <label for="add_4" >Összeadás</label>
         </td>
       </tr>
       <tr>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="sub_1" name="sub_1" onclick="rebuild_table()" />
-          <label for="sub_1" >Kivonások</label>
+          <label for="sub_1" >Kivonás</label>
         </td>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="sub_2" name="sub_2" checked="true" onclick="rebuild_table()" />
-          <label for="sub_2" >Kivonások</label>
+          <label for="sub_2" >Kivonás</label>
         </td>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="sub_3" name="sub_3" checked="true" onclick="rebuild_table()" />
-          <label for="sub_3" >Kivonások</label>
+          <label for="sub_3" >Kivonás</label>
         </td>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="sub_4" name="sub_4" checked="true" onclick="rebuild_table()" />
-          <label for="sub_4" >Kivonások</label>
+          <label for="sub_4" >Kivonás</label>
         </td>
       </tr>
       <tr>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="mul_1" name="mul_1" checked="false" disabled="true"/>
-          <label for="mul_1" >Szorzások</label>
+          <label for="mul_1" >Szorzás</label>
         </td>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="mul_2" name="mul_2" checked="false" disabled="true"/>
-          <label for="mul_2" >Szorzások</label>
+          <label for="mul_2" >Szorzás</label>
         </td>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="mul_3" name="mul_3" checked="false" disabled="true"/>
-          <label for="mul_3" >Szorzások</label>
+          <label for="mul_3" >Szorzás</label>
         </td>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="mul_4" name="mul_4" checked="false" disabled="true"/>
-          <label for="mul_4" >Szorzások</label>
+          <label for="mul_4" >Szorzás</label>
         </td>
       </tr>
       <tr>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="div_1" name="div_1" checked="false" disabled="true"/>
-          <label for="div_1" >Osztások</label>
+          <label for="div_1" >Osztás</label>
         </td>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="div_2" name="div_2" checked="false" disabled="true"/>
-          <label for="div_2" >Osztások</label>
+          <label for="div_2" >Osztás</label>
         </td>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="div_3" name="div_3" checked="false" disabled="true"/>
-          <label for="div_3" >Osztások</label>
+          <label for="div_3" >Osztás</label>
         </td>
-        <td class="settings">
+        <td>
           <input type="checkbox" id="div_4" name="div_4" checked="false" disabled="true"/>
-          <label for="div_4" >Osztások</label>
+          <label for="div_4" >Osztás</label>
         </td>
       </tr>
     </table>
