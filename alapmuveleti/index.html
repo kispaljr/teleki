@@ -49,8 +49,6 @@
     const crossing_10_chance_add = 0.5;
     const crossing_10_chance_sub = 0.5;
 
-    const url_params = new URLSearchParams(window.location.search);
-
     // NOTE: the number of all possible operations is quite small (231 for all possibilities, and only 190: if you exclude 0 and 1)
     // this makes pregenerating all possible combinations viable
     function precompute_operands() {
@@ -86,6 +84,7 @@
       }
     }
 
+    // Common base class for generating random additions and subtractions
     class AddSub {
       constructor(crossing_10_chance) {
         this.operands_crossing_10 = new InRandomOrder(crossing_10s);
@@ -97,6 +96,7 @@
         return true
       }
 
+      // returns the next random operation
       next() {
           do {
             if (Math.random() < this.crossing_10_chance) {
@@ -109,54 +109,77 @@
       }
     }
 
+    // Generates random additions
     class Addition extends AddSub {
       to_string(a, b, c) {
           return `${a} + ${b} =   `
       }
+
+      get short_name() { return "add"; }
     }
 
+    // Generates random substractions
     class Subtraction extends AddSub {
       filter(a, b, c) {
-        // filter out things like 20-13 that is tecnically not a "10 crossing", but...
+        // filter out things like 20-13 that is technically not a "10 crossing", but...
         return !((c == 20) && (a > 10));
       }
 
       to_string(a, b, c) {
           return `${c} - ${a} =   `
       }
+
+      get short_name() { return "sub"; }
     }
 
+    // Generates the next random operation in a column
     class Column {
-      constructor(ops) {
-        this.ops = ops;
+      constructor(op_generators) {
+        this.op_generators = op_generators;
       }
 
       next() {
-        return rando(this.ops).value.next();
+        return rando(this.op_generators).value.next();
       }
     }
 
 
     function rebuild_table() {
-      var add = new Addition(crossing_10_chance_add);
-      var sub = new Subtraction(crossing_10_chance_sub)
+      // parse 10-crossing settings
 
-      var columns = [ new Column([add]), 
-                      new Column([sub]), 
-                      new Column([add, sub]), 
-                      new Column([sub, add])];
+      let a = document.getElementById("add_10crossings_ratio").value;
+      let add_10crossings_ratio = parseFloat(document.getElementById("add_10crossings_ratio").value) / 100.0;
+      let sub_10crossings_ratio = parseFloat(document.getElementById("sub_10crossings_ratio").value) / 100.0;
 
-      function get_operation(x, y) {
-        return columns[x].next();
+      var all_op_generators = [
+        new Addition(add_10crossings_ratio),
+        new Subtraction(sub_10crossings_ratio)
+      ];
+
+      // collect operation generators for each column
+      let columns = [];
+      for (let x = 0; x < 4; x++) {
+        let op_gens = [];
+        for (let i = 0; i < all_op_generators.length; i++) {
+          var cb = document.getElementById(`${all_op_generators[i].short_name}_${x + 1}`);
+          if (cb.checked) {
+            op_gens.push(all_op_generators[i]);
+          }
+        }
+        if (!op_gens.length) {
+          op_gens = all_op_generators.slice();
+        }
+        columns.push(new Column(op_gens));
       }
 
-      var tbl = document.getElementById('operations')
+      // rewrite the table of operations
+      var tbl = document.getElementById('operations');
       tbl.innerHTML = '';
-      for (let i = 0; i < 25; i++) {
+      for (let y = 0; y < 25; y++) {
         const tr = tbl.insertRow();
-        for (let j = 0; j < 4; j++) {
+        for (let x = 0; x < 4; x++) {
             const td = tr.insertCell();
-            td.appendChild(document.createTextNode(get_operation(j, i)));
+            td.appendChild(document.createTextNode(columns[x].next()));
         }
       }
     }
@@ -166,49 +189,60 @@
 
 <body onload="rebuild_table()">
   <div class="settings">
-    <label for="add_10crossings_ratio" >Tízes átlépések aránya az összeadásokban: </label>
-    <input type="number" id="add_10crossings_ratio" name="add_10crossings_ratio" min="0" max="100" value="50" size="5"/>%
-    (0 esetén egyáltalán nem lesz tízes átlépés)
-    <br/>
-    
-    <label for="sub_10crossings_ratio" >Tízes átlépések aránya a kivonásokban: </label>
-    <input type="number" id="sub_10crossings_ratio" name="sub_10crossings_ratio" min="0" max="100" value="0" size="5"/>%
-    (0 esetén egyáltalán nem lesz tízes átlépés)
-    <br/>
+    <p>Az alábbi beállításokkal tudod befolyásolni, hogy milyen teszt készüljön. Ha a beállítások megvátoztatása után nem készít magától új feldatlapot, akkor nyomd meg az "Újat kérek!" gombot.<br/>
+    Ha készen vagy, egyszerűen nyomtasd ki ezt az oldalt a böngésződből (általában Ctrl+P). A beállító gombok a papíron már nem fognak látszani.
+    </p>
+
+
+
+    <p>
+      <input type="button" id="recalc" name="recalc" value="Újat kérek!" onclick="rebuild_table()" />
+    </p>
+    <p>
+      <label for="add_10crossings_ratio" >Tízes átlépések aránya az összeadásokban: </label>
+      <input type="number" id="add_10crossings_ratio" name="add_10crossings_ratio" min="0" max="100" value="50" size="3" onchange="rebuild_table()"/>%
+      (0 esetén egyáltalán nem lesz tízes átlépés)
+    </p>
+    <p>
+      <label for="sub_10crossings_ratio" >Tízes átlépések aránya a kivonásokban: </label>
+      <input type="number" id="sub_10crossings_ratio" name="sub_10crossings_ratio" min="0" max="100" value="50" size="3" onchange="rebuild_table()"/>%
+      (0 esetén egyáltalán nem lesz tízes átlépés)
+    </p>
+
     <table>
       <tr>
         <td class="settings">
-          <input type="checkbox" id="add_1" name="add_1" onclick="rebuild_table()" checked="true" />
+          <input type="checkbox" id="add_1" name="add_1" checked="true" onclick="rebuild_table()" />
           <label for="add_1" >Összeadások</label>
         </td>
         <td class="settings">
-          <input type="checkbox" id="add_2" name="add_2" />
+          <input type="checkbox" id="add_2" name="add_2" onclick="rebuild_table()" />
           <label for="add_2" >Összeadások</label>
         </td>
         <td class="settings">
-          <input type="checkbox" id="add_3" name="add_3" checked="true" />
+          <input type="checkbox" id="add_3" name="add_3" checked="true" onclick="rebuild_table()" />
           <label for="add_3" >Összeadások</label>
         </td>
         <td class="settings">
-          <input type="checkbox" id="add_4" name="add_4" checked="true" />
+          <input type="checkbox" id="add_4" name="add_4" checked="true" onclick="rebuild_table()" />
           <label for="add_4" >Összeadások</label>
         </td>
       </tr>
       <tr>
         <td class="settings">
-          <input type="checkbox" id="sub_1" name="sub_1" />
+          <input type="checkbox" id="sub_1" name="sub_1" onclick="rebuild_table()" />
           <label for="sub_1" >Kivonások</label>
         </td>
         <td class="settings">
-          <input type="checkbox" id="sub_2" name="sub_2" checked="true" />
+          <input type="checkbox" id="sub_2" name="sub_2" checked="true" onclick="rebuild_table()" />
           <label for="sub_2" >Kivonások</label>
         </td>
         <td class="settings">
-          <input type="checkbox" id="sub_3" name="sub_3" checked="true" />
+          <input type="checkbox" id="sub_3" name="sub_3" checked="true" onclick="rebuild_table()" />
           <label for="sub_3" >Kivonások</label>
         </td>
         <td class="settings">
-          <input type="checkbox" id="sub_4" name="sub_4" checked="true" />
+          <input type="checkbox" id="sub_4" name="sub_4" checked="true" onclick="rebuild_table()" />
           <label for="sub_4" >Kivonások</label>
         </td>
       </tr>
