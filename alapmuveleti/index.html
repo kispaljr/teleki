@@ -1,31 +1,33 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Alapműveleti teszt</title>
   <style>
-
     table {
       border: none;
-      border-collapse: collapse; 
+      border-collapse: collapse;
       table-layout: fixed;
-      width: 100%;  
+      width: 100%;
       margin-top: 1cm;
       /*margin: 1cm;*/
-    } 
-     
-    th,td {
-      border: none; /* 1px solid; */
-      font-size:  18pt;
+    }
+
+    th,
+    td {
+      border: none;
+      /* 1px solid; */
+      font-size: 18pt;
       font-family: Arial;
-      height:  28pt;
+      height: 28pt;
     }
 
     @media screen {
 
       .settings {
-        font-size:  14pt;
+        font-size: 14pt;
         font-family: Arial;
         margin: 0;
       }
@@ -35,10 +37,11 @@
         padding: 10px;
       }
 
-      table.settings td,th {
-        height:  auto;
+      table.settings td,
+      th {
+        height: auto;
         text-align: left;
-        font-size:  14pt;
+        font-size: 14pt;
         font-family: Arial;
       }
 
@@ -49,97 +52,17 @@
         display: none;
       }
     }
-
   </style>
-  <script src="https://randojs.com/2.0.0.js"></script>  
+  <script src="https://randojs.com/2.0.0.js"></script>
+  <script src="save.js"></script>
   <script>
-    const min_num = 2; 
-    const max_num = 20;
+    const min_num = 2;
+    const max_num = 100;
     const column_cnt = 4;
     var cookie_expiry = new Date(new Date().getTime() + 10 * 365 * 24 * 3600 * 1000);
-
-    // NOTE: the number of all possible operations is quite small (231 for all possibilities, and only 190: if you exclude 0 and 1)
-    // this makes pregenerating all possible combinations viable
-    function precompute_operands() {
-      // a,b,c, so that: min_num <= a, b <= c <= max_num and a + b = c
-      let a, b, c;
-      let crossing_10s = [];
-      let not_crossing_10s = [];
-      for (c = 2 * min_num; c <= max_num; c++) {
-        for (a = min_num; a <= c - min_num; a++) {
-          b = c - a;
-          if ((a < 10) && (b < 10) && (c > 10)) {
-            crossing_10s.push({a, b, c});
-          } else {
-            not_crossing_10s.push({a, b, c});
-          }
-        }
-      }
-      return {crossing_10s, not_crossing_10s}
-    }
-    var {crossing_10s, not_crossing_10s} = precompute_operands();
-
-    // returns the elements of a sequence in a random order 
-    class InRandomOrder {
-      constructor(sequence) {
-          this.sequence = randoSequence(sequence);
-          this.next_i = 0; // next index in the sequence
-      }
-
-      next() {
-          let i = this.next_i;
-          this.next_i = (this.next_i + 1) % this.sequence.length;
-          return this.sequence[i].value;
-      }
-    }
-
-    // Common base class for generating random additions and subtractions
-    class AddSub {
-      constructor() {
-        this.operands_crossing_10 = new InRandomOrder(crossing_10s);
-        this.operands_not_crossing_10 = new InRandomOrder(not_crossing_10s);
-        this.crossing_10_ratio = get_float_input(this.short_name + "_10crossings_ratio") / 100.0; 
-      }
-
-      filter(a, b, c) {
-        return true
-      }
-
-      // returns the next random operation
-      next() {
-          do {
-            if (Math.random() < this.crossing_10_ratio) {
-              var {a, b, c} = this.operands_crossing_10.next();
-            } else {
-              var {a, b, c} = this.operands_not_crossing_10.next();
-            }
-          } while (! this.filter(a, b, c));
-          return this.to_string(a, b, c);
-      }
-    }
-
-    // Generates random additions
-    class Addition extends AddSub {
-      to_string(a, b, c) {
-          return `${a} + ${b} =   `
-      }
-
-      get short_name() { return "add"; }
-    }
-
-    // Generates random substractions
-    class Subtraction extends AddSub {
-      filter(a, b, c) {
-        // filter out things like 20-13 that is technically not a "10 crossing", but...
-        return !((c == 20) && (a > 10));
-      }
-
-      to_string(a, b, c) {
-          return `${c} - ${a} =   `
-      }
-
-      get short_name() { return "sub"; }
-    }
+  </script>
+  <script src="addsub.js"></script>
+  <script>
 
     // Generates the next random operation in a column
     class Column {
@@ -160,65 +83,6 @@
       }
     }
 
-    // save the value of an input field to cookie
-    function save_field(id) {
-      let element = document.getElementById(id);
-      if (element.matches('input[type="checkbox"]')) {
-        var field_value = element.checked;
-      } else {
-        var field_value = escape(element.value);
-      }
-      document.cookie = `${id}=${field_value}; expires=${cookie_expiry.toGMTString()}`;
-    }
-
-    // load the value of an input field from cookie
-    function load_field(id) {
-      const value = ('; '+document.cookie).split(`; ${id}=`).pop().split(';')[0]; 
-      if (value != "") {
-        // console.log(`${id}=${value}`);
-        let element = document.getElementById(id);
-        if (element.matches('input[type="checkbox"]')) {
-          element.checked = (value === "true");
-        } else {
-          element.value = value; 
-        }
-      }
-    }
-
-    // iterator of all the valid "setting" input field IDs
-    function* field_names() {
-      for (let op of ["add", "sub"]) {
-        yield `${op}_10crossings_ratio`;
-        for (let x = 0; x < column_cnt; x++) {
-          yield `${op}_${x + 1}`;
-        }
-      }
-    }
-
-    // save all settings to cookie
-    function save_settings() {
-      for (let field of field_names()) {
-        save_field(field);
-      }
-      // console.log("cookie: " + document.cookie);      
-    }
-
-    // load all settings from cookie
-    function load_settings() {
-      for (let field of field_names()) {
-        load_field(field);
-      }
-    }
-
-    function get_float_input(id) {
-      let element = document.getElementById(id);
-      let val = parseFloat(document.getElementById(id).value);
-      if (isNaN(val)) {
-        val = 0.0;
-        element.value = 0;
-      }
-      return val;
-    }
 
     function rebuild_table() {
       // create a generator for all valid operations
@@ -243,19 +107,64 @@
       for (let y = 0; y < 25; y++) {
         const tr = tbl.insertRow();
         for (let x = 0; x < column_cnt; x++) {
-            const td = tr.insertCell();
-            td.appendChild(document.createTextNode(columns[x].next()));
+          const td = tr.insertCell();
+          td.appendChild(document.createTextNode(columns[x].next()));
         }
       }
     }
 
-  </script>  
+    function build_settings() {
+
+      var tbl = document.getElementById('per_column_settings');
+      tbl.innerHTML = `
+      <tr>
+        <th colspan="${column_cnt}" style="padding-bottom: 10px;padding-top: 15px;">Művelettípusok kiválasztása oszloponként
+          (egyszerre több is választható):
+        </th>
+      </tr>
+`;
+      const tr = tbl.insertRow();
+      for (let x = 1; x <= column_cnt; x++) {
+        const td = tr.insertCell();
+        td.innerHTML = `
+          <table class="settings">
+            <tr>
+              <td>
+                <input type="checkbox" id="add_${x}" name="add_${x}" checked="true" onclick="rebuild_table()" />
+                <label for="add_${x}">Összeadás</label>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <input type="checkbox" id="sub_${x}" name="sub_${x}" checked="true" onclick="rebuild_table()" />
+                <label for="sub_${x}">Kivonás</label>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <input type="checkbox" id="mul_${x}" name="mul_${x}" checked="false" disabled="true" />
+                <label for="mul_${x}">Szorzás</label>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <input type="checkbox" id="div_${x}" name="div_${x}" checked="false" disabled="true" />
+                <label for="div_${x}">Osztás</label>
+              </td>
+            </tr>
+          </table>
+`;
+      }
+    }
+  </script>
 </head>
 
-<body onload="load_settings(); rebuild_table()">
+<body onload="build_settings(); load_settings(); rebuild_table()">
   <div class="settings">
-    <p>Az alábbi beállításokkal tudod befolyásolni, hogy milyen teszt készüljön. Ha a beállítások megvátoztatása után nem készít magától új feladatlapot, akkor nyomd meg az "Újat kérek!" gombot.<br/>
-    Ha készen vagy, egyszerűen nyomtasd ki ezt az oldalt a böngésződből (általában Ctrl+P). A beállító gombok a papíron már nem fognak látszani.
+    <p>Az alábbi beállításokkal tudod befolyásolni, hogy milyen teszt készüljön. Ha a beállítások megvátoztatása után
+      nem készít magától új feladatlapot, akkor nyomd meg az "Újat kérek!" gombot.<br />
+      Ha készen vagy, egyszerűen nyomtasd ki ezt az oldalt a böngésződből (általában Ctrl+P). A beállító gombok a
+      papíron már nem fognak látszani.
     </p>
     <p>Ha hibát találtok, kérésetek vagy kérdésetek van, Viberen és emailben elértek.</p>
     <p>
@@ -265,10 +174,11 @@
     <table class="settings" style="width: auto;">
       <tr>
         <th class="settings">
-          <label for="add_10crossings_ratio" >Tízes átlépések aránya az összeadásokban: &nbsp;</label>
+          <label for="add_10crossings_ratio">Tízes átlépések aránya az összeadásokban: &nbsp;</label>
         </th>
         <td class="settings" nowrap="true">
-          <input type="number" id="add_10crossings_ratio" name="add_10crossings_ratio" min="0" max="100" value="50" size="3" onchange="rebuild_table()"/>% &nbsp;
+          <input type="number" id="add_10crossings_ratio" name="add_10crossings_ratio" min="0" max="100" value="50"
+            size="3" onchange="rebuild_table()" />% &nbsp;
         </td>
         <td>
           (0 esetén egyáltalán nem lesz tízes átlépés)
@@ -276,10 +186,11 @@
       </tr>
       <tr>
         <th class="settings">
-          <label for="sub_10crossings_ratio" >Tízes átlépések aránya a kivonásokban: &nbsp;</label>
+          <label for="sub_10crossings_ratio">Tízes átlépések aránya a kivonásokban: &nbsp;</label>
         </th>
         <td class="settings" nowrap="true">
-          <input type="number" id="sub_10crossings_ratio" name="sub_10crossings_ratio" min="0" max="100" value="50" size="3" onchange="rebuild_table()"/>% &nbsp;
+          <input type="number" id="sub_10crossings_ratio" name="sub_10crossings_ratio" min="0" max="100" value="50"
+            size="3" onchange="rebuild_table()" />% &nbsp;
         </td>
         <td>
           (0 esetén egyáltalán nem lesz tízes átlépés)
@@ -287,88 +198,12 @@
       </tr>
     </table>
 
-    <table class="settings">
-      <tr>
-        <th colspan="4" style="padding-bottom: 10px;padding-top: 15px;">Művelettípusok kiválasztása oszloponként (egyszerre több is választható):</td>
-      </tr>
-      <tr>
-        <td>
-          <input type="checkbox" id="add_1" name="add_1" checked="true" onclick="rebuild_table()" />
-          <label for="add_1" >Összeadás</label>
-        </td>
-        <td>
-          <input type="checkbox" id="add_2" name="add_2" onclick="rebuild_table()" />
-          <label for="add_2" >Összeadás</label>
-        </td>
-        <td>
-          <input type="checkbox" id="add_3" name="add_3" checked="true" onclick="rebuild_table()" />
-          <label for="add_3" >Összeadás</label>
-        </td>
-        <td>
-          <input type="checkbox" id="add_4" name="add_4" checked="true" onclick="rebuild_table()" />
-          <label for="add_4" >Összeadás</label>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <input type="checkbox" id="sub_1" name="sub_1" onclick="rebuild_table()" />
-          <label for="sub_1" >Kivonás</label>
-        </td>
-        <td>
-          <input type="checkbox" id="sub_2" name="sub_2" checked="true" onclick="rebuild_table()" />
-          <label for="sub_2" >Kivonás</label>
-        </td>
-        <td>
-          <input type="checkbox" id="sub_3" name="sub_3" checked="true" onclick="rebuild_table()" />
-          <label for="sub_3" >Kivonás</label>
-        </td>
-        <td>
-          <input type="checkbox" id="sub_4" name="sub_4" checked="true" onclick="rebuild_table()" />
-          <label for="sub_4" >Kivonás</label>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <input type="checkbox" id="mul_1" name="mul_1" checked="false" disabled="true"/>
-          <label for="mul_1" >Szorzás</label>
-        </td>
-        <td>
-          <input type="checkbox" id="mul_2" name="mul_2" checked="false" disabled="true"/>
-          <label for="mul_2" >Szorzás</label>
-        </td>
-        <td>
-          <input type="checkbox" id="mul_3" name="mul_3" checked="false" disabled="true"/>
-          <label for="mul_3" >Szorzás</label>
-        </td>
-        <td>
-          <input type="checkbox" id="mul_4" name="mul_4" checked="false" disabled="true"/>
-          <label for="mul_4" >Szorzás</label>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <input type="checkbox" id="div_1" name="div_1" checked="false" disabled="true"/>
-          <label for="div_1" >Osztás</label>
-        </td>
-        <td>
-          <input type="checkbox" id="div_2" name="div_2" checked="false" disabled="true"/>
-          <label for="div_2" >Osztás</label>
-        </td>
-        <td>
-          <input type="checkbox" id="div_3" name="div_3" checked="false" disabled="true"/>
-          <label for="div_3" >Osztás</label>
-        </td>
-        <td>
-          <input type="checkbox" id="div_4" name="div_4" checked="false" disabled="true"/>
-          <label for="div_4" >Osztás</label>
-        </td>
-      </tr>
-    </table>
-
+    <table id="per_column_settings" class="settings"> </table>
   </div>
 
 
   <table id='operations' />
 
 </body>
+
 </html>
