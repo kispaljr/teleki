@@ -1,3 +1,9 @@
+// TODO: save/load: allowed_interval
+// TODO: save/load: random empty place options
+
+var cookie_expiry = new Date(new Date().getTime() + 10 * 365 * 24 * 3600 * 1000);
+
+
 // save the value of an input field to cookie
 function save_field(id) {
   let element = document.getElementById(id);
@@ -29,8 +35,8 @@ function* field_names() {
     yield `${op}_10crossings_ratio`;
   }
   for (let op of ["add", "sub", "mul", "div"]) {
-    for (let x = 0; x < column_cnt; x++) {
-      yield `${op}_${x + 1}`;
+    for (let x = 1; x <= column_cnt; x++) {
+      yield `${op}_${x}`;
     }
   }
 }

@@ -54,13 +54,13 @@
     }
   </style>
   <script src="https://randojs.com/2.0.0.js"></script>
-  <script src="save.js"></script>
   <script>
     const min_num = 2;
-    const max_num = 100;
+    var max_num = 20;
+    var max_2nd_operand = max_num;
     const column_cnt = 4;
-    var cookie_expiry = new Date(new Date().getTime() + 10 * 365 * 24 * 3600 * 1000);
   </script>
+  <script src="save.js"></script>
   <script src="addsub.js"></script>
   <script>
 
@@ -81,6 +81,34 @@
       next() {
         return rando(this.op_generators).value.next();
       }
+    }
+
+    function rebuild_all() {
+      let interval = document.querySelector('input[name="allowed_interval"]:checked').value;
+      switch (interval) {
+        case "100-beginner": {
+          max_num = 100;
+          max_2nd_operand = 9;
+          break;
+        } 
+        case "100": {
+          max_num = 100;
+          max_2nd_operand = max_num;
+          break;
+        }
+        case "20": {
+          max_num = 20;
+          max_2nd_operand = max_num;
+          break;
+        }
+        default:
+          max_num = 10;
+          max_2nd_operand = max_num;
+          console.error("Invalid allowed_interval (szamkor) value:", interval);
+          break;
+      }
+      precompute_add_sub_operands();
+      rebuild_table();
     }
 
 
@@ -142,24 +170,28 @@
             </tr>
             <tr>
               <td>
-                <input type="checkbox" id="mul_${x}" name="mul_${x}" checked="false" disabled="true" />
+                <input type="checkbox" id="mul_${x}" name="mul_${x}" disabled="true" />
                 <label for="mul_${x}">Szorzás</label>
               </td>
             </tr>
             <tr>
               <td>
-                <input type="checkbox" id="div_${x}" name="div_${x}" checked="false" disabled="true" />
+                <input type="checkbox" id="div_${x}" name="div_${x}" disabled="true" />
                 <label for="div_${x}">Osztás</label>
               </td>
             </tr>
           </table>
+          <div>
+            <input type="checkbox" id="random_empty_pos_${x}" name="random_empty_pos_${x}"  />
+            <label for="random_empty_pos_${x}">Kitöltendő hely véletlenszerű pozícióban</label>
+          </div>
 `;
       }
     }
   </script>
 </head>
 
-<body onload="build_settings(); load_settings(); rebuild_table()">
+<body onload="build_settings(); load_settings(); rebuild_all();">
   <div class="settings">
     <p>Az alábbi beállításokkal tudod befolyásolni, hogy milyen teszt készüljön. Ha a beállítások megvátoztatása után
       nem készít magától új feladatlapot, akkor nyomd meg az "Újat kérek!" gombot.<br />
@@ -172,6 +204,27 @@
     </p>
 
     <table class="settings" style="width: auto;">
+      <tr>
+        <fieldset>
+          <legend>Számkör:</legend>
+
+          <div>
+            <input type="radio" id="allowed_interval_20" name="allowed_interval" value="20" onchange="rebuild_all()"
+                   checked>
+            <label for="allowed_interval_20">20-as számkör</label>
+          </div>
+
+          <div>
+            <input type="radio" id="allowed_interval_100_beginner" name="allowed_interval" value="100-beginner" onchange="rebuild_all()">
+            <label for="allowed_interval_100_beginner">100-as számkör, második operandus 10 alatt</label>
+          </div>
+
+          <div>
+            <input type="radio" id="allowed_interval_100" name="allowed_interval" value="100" onchange="rebuild_all()">
+            <label for="allowed_interval_100">100-as számkör</label>
+          </div>
+        </fieldset>
+      </tr>
       <tr>
         <th class="settings">
           <label for="add_10crossings_ratio">Tízes átlépések aránya az összeadásokban: &nbsp;</label>

@@ -1,10 +1,14 @@
+var crossing_10s = [];
+var not_crossing_10s = [];
+
 // NOTE: the number of all possible operations is quite small (if max_num == 20, then 231 for all possibilities, and only 190: if you exclude 0 and 1)
 // this makes pregenerating all possible combinations viable
 function precompute_add_sub_operands() {
     // a,b,c, so that: min_num <= a, b <= c <= max_num and a + b = c
+
     let a, b, c;
-    let crossing_10s = [];
-    let not_crossing_10s = [];
+    crossing_10s = [];
+    not_crossing_10s = [];
     for (c = 2 * min_num; c <= max_num; c++) {
         for (a = min_num; a <= c - min_num; a++) {
             b = c - a;
@@ -21,9 +25,7 @@ function precompute_add_sub_operands() {
             }
         }
     }
-    return { crossing_10s, not_crossing_10s }
 }
-var { crossing_10s, not_crossing_10s } = precompute_add_sub_operands();
 
 // returns the elements of a sequence in a random order 
 class InRandomOrder {
@@ -71,7 +73,7 @@ class Addition extends AddSub {
     }
 
     filter(a, b, c) {
-        return (b <= 10) || (b % 10 == 0);
+        return b <= max_2nd_operand;
     }
 
     get short_name() { return "add"; }
@@ -84,7 +86,7 @@ class Subtraction extends AddSub {
     }
 
     filter(a, b, c) {
-        return (a <= 10) || (a % 10 == 0);
+        return a <= max_2nd_operand;
     }
 
 
