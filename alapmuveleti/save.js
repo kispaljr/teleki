@@ -4,15 +4,34 @@
 var cookie_expiry = new Date(new Date().getTime() + 10 * 365 * 24 * 3600 * 1000);
 
 
-// save the value of an input field to cookie
-function save_field(id) {
-  let element = document.getElementById(id);
-  if (element.matches('input[type="checkbox"]')) {
-    var field_value = element.checked;
-  } else {
-    var field_value = escape(element.value);
+// iterator of all the valid "setting" input field IDs
+function* field_names() {
+  for (let op of ["add", "sub"]) {
+    yield `${op}_10crossings_ratio`;
   }
-  document.cookie = `${id}=${field_value}; expires=${cookie_expiry.toGMTString()}`;
+  for (let op of ["add", "sub", "mul", "div", "random_missing_operand"]) {
+    for (let x = 1; x <= column_cnt; x++) {
+      yield `${op}_${x}`;
+    }
+  }
+  yield "allowed_interval";
+}
+
+
+// save the value of an input field to cookie
+function save_field(name) {
+  let element = document.querySelector(`input[name="${name}"]`);
+  let field_value = "";
+  if (element.matches('input[type="checkbox"]')) {
+    field_value = element.checked;
+  } 
+  else if (element.matches('input[type="radio"]')) {
+    field_value = get_radiobutton_value(name);
+  }
+  else {
+    field_value = escape(element.value);
+  }
+  document.cookie = `${name}=${field_value}; expires=${cookie_expiry.toGMTString()}`;
 }
 
 // load the value of an input field from cookie
@@ -23,20 +42,12 @@ function load_field(name) {
     let element = document.querySelector(`input[name="${name}"]`);
     if (element.matches('input[type="checkbox"]')) {
       element.checked = (value === "true");
-    } else {
-      element.value = value;
+    } 
+    else if (element.matches('input[type="radio"]')) {
+      document.querySelector(`input[name="${name}"][value="${value}"]`).checked = true;
     }
-  }
-}
-
-// iterator of all the valid "setting" input field IDs
-function* field_names() {
-  for (let op of ["add", "sub"]) {
-    yield `${op}_10crossings_ratio`;
-  }
-  for (let op of ["add", "sub", "mul", "div"]) {
-    for (let x = 1; x <= column_cnt; x++) {
-      yield `${op}_${x}`;
+    else {
+      element.value = value;
     }
   }
 }
