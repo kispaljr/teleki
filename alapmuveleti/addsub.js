@@ -69,7 +69,7 @@ class AddSub {
 // Generates random additions
 class Addition extends AddSub {
     render(a, b, c) {
-        return `${a} + ${b} =   `
+        return [a, '+', b, '=', c];
     }
 
     filter(a, b, c) {
@@ -82,7 +82,7 @@ class Addition extends AddSub {
 // Generates random substractions
 class Subtraction extends AddSub {
     render(a, b, c) {
-        return `${c} - ${a} =   `
+        return [c, '-', a, '=', b];
     }
 
     filter(a, b, c) {

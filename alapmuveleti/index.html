@@ -15,6 +15,12 @@
       /*margin: 1cm;*/
     }
 
+    table.exercises {
+      width: auto;
+      border-collapse: separate;
+      border-spacing: 0.5em 0;
+    }
+
     th,
     td {
       border: none;
@@ -69,22 +75,30 @@
       constructor(x, all_op_generators) {
         this.op_generators = all_op_generators.filter(
           op => {
-            return document.getElementById(`${op.short_name}_${x + 1}`).checked;
+            return get_bool_input(`${op.short_name}_${x + 1}`);
           }
         );
 
-        if (!this.op_generators.length) {
+        if (0 == this.op_generators.length) {
           this.op_generators = all_op_generators.slice();
         }
+
+        this.random_missing_operand = get_bool_input(`random_missing_operand_${x + 1}`);
       }
 
       next() {
-        return rando(this.op_generators).value.next();
+        let op = rando(this.op_generators).value.next();
+        let missing_pos = 4;
+        if (this.random_missing_operand) {
+          missing_pos = rando([0,2,4]).value;
+        }
+        op[missing_pos] = "___";
+        return op;
       }
     }
 
     function rebuild_all() {
-      let interval = document.querySelector('input[name="allowed_interval"]:checked').value;
+      let interval = get_radiobutton_value("allowed_interval");
       switch (interval) {
         case "100-beginner": {
           max_num = 100;
@@ -129,14 +143,18 @@
       // NOTE: the lines above can actually modify the settings
       save_settings();
 
-      // rewrite the table of operations
-      var tbl = document.getElementById('operations');
-      tbl.innerHTML = '';
-      for (let y = 0; y < 25; y++) {
-        const tr = tbl.insertRow();
-        for (let x = 0; x < column_cnt; x++) {
-          const td = tr.insertCell();
-          td.appendChild(document.createTextNode(columns[x].next()));
+      // rewrite the table of exercises
+      for (let x = 0; x < column_cnt; x++) {
+        console.log(`exercises_${x + 1}`);
+        var tbl = document.getElementById(`exercises_${x + 1}`);
+        tbl.innerHTML = '';
+        for (let y = 0; y < 25; y++) {
+          const tr = tbl.insertRow();
+          parts = columns[x].next();
+          for (const part of parts) { 
+            const td = tr.insertCell();
+            td.appendChild(document.createTextNode(part));
+          }
         }
       }
     }
@@ -182,8 +200,8 @@
             </tr>
           </table>
           <div>
-            <input type="checkbox" id="random_empty_pos_${x}" name="random_empty_pos_${x}"  />
-            <label for="random_empty_pos_${x}">Kitöltendő hely véletlenszerű pozícióban</label>
+            <input type="checkbox" id="random_missing_operand_${x}" name="random_missing_operand_${x}" onclick="rebuild_table()" />
+            <label for="random_missing_operand_${x}">Kitöltendő hely véletlenszerű pozícióban</label>
           </div>
 `;
       }
@@ -255,7 +273,22 @@
   </div>
 
 
-  <table id='operations' />
+  <table id='exercises'>
+    <tr>
+      <td>
+        <table id='exercises_1' class='exercises'></table>
+      </td>
+      <td>
+        <table id='exercises_2' class='exercises'></table>
+      </td>
+      <td>
+        <table id='exercises_3' class='exercises'></table>
+      </td>
+      <td>
+        <table id='exercises_4' class='exercises'></table>
+      </td>
+    </tr>
+  </table>
 
 </body>
 

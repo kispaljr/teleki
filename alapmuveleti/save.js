@@ -16,11 +16,11 @@ function save_field(id) {
 }
 
 // load the value of an input field from cookie
-function load_field(id) {
-  const value = ('; ' + document.cookie).split(`; ${id}=`).pop().split(';')[0];
+function load_field(name) {
+  const value = ('; ' + document.cookie).split(`; ${name}=`).pop().split(';')[0];
   if (value != "") {
-    // console.log(`${id}=${value}`);
-    let element = document.getElementById(id);
+    console.log(`load: ${name}=${value}`);
+    let element = document.querySelector(`input[name="${name}"]`);
     if (element.matches('input[type="checkbox"]')) {
       element.checked = (value === "true");
     } else {
@@ -64,4 +64,12 @@ function get_float_input(id) {
     element.value = 0;
   }
   return val;
+}
+
+function get_bool_input(name) {
+  return document.querySelector(`input[name="${name}"]`).checked
+}
+
+function get_radiobutton_value(name) {
+  return document.querySelector(`input[name="${name}"]:checked`).value;
 }
