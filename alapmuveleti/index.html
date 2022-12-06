@@ -11,19 +11,22 @@
       border-collapse: collapse;
       table-layout: fixed;
       width: 100%;
-      margin-top: 1cm;
+/*      margin-top: 0.1cm;*/
       /*margin: 1cm;*/
     }
 
     table.exercises {
       width: auto;
-      border-collapse: separate;
-      border-spacing: 0.5em 0;
+/*      border: 1px solid red;*/
     }
 
-    table.columns {
-      border-collapse: separate;
-      border-right: 15em;
+    table.exercises td {
+      padding-right: 0.3em;
+      text-align: right;
+    }
+
+    td.columns {
+/*      border-right: 1px solid black;*/
     }
 
 
@@ -31,7 +34,7 @@
     td {
       border: none;
       /* 1px solid; */
-      font-size: 14pt;
+      font-size: 16pt;
       font-family: Arial;
       height: 28pt;
     }
@@ -283,12 +286,15 @@
       <td class='columns'>
         <table id='exercises_1' class='exercises'></table>
       </td>
+      <td style="width: 50px" />
       <td class='columns'>
         <table id='exercises_2' class='exercises'></table>
       </td>
+      <td style="width: 50px" />
       <td class='columns'>
         <table id='exercises_3' class='exercises'></table>
       </td>
+      <td style="width: 50px" />
       <td class='columns'>
         <table id='exercises_4' class='exercises'></table>
       </td>
