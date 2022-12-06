@@ -229,28 +229,28 @@
       <input class="settings" type="button" id="recalc" name="recalc" value="Újat kérek!" onclick="rebuild_table()" />
     </p>
 
+    <p>
+      <fieldset>
+        <legend>Számkör:</legend>
+
+        <div>
+          <input type="radio" id="allowed_interval_20" name="allowed_interval" value="20" onchange="rebuild_all()"
+                 checked>
+          <label for="allowed_interval_20">20-as számkör</label>
+        </div>
+
+        <div>
+          <input type="radio" id="allowed_interval_100_beginner" name="allowed_interval" value="100-beginner" onchange="rebuild_all()">
+          <label for="allowed_interval_100_beginner">100-as számkör, második operandus 10 alatt</label>
+        </div>
+
+        <div>
+          <input type="radio" id="allowed_interval_100" name="allowed_interval" value="100" onchange="rebuild_all()">
+          <label for="allowed_interval_100">100-as számkör</label>
+        </div>
+      </fieldset>
+    </p>
     <table class="settings" style="width: auto;">
-      <tr>
-        <fieldset>
-          <legend>Számkör:</legend>
-
-          <div>
-            <input type="radio" id="allowed_interval_20" name="allowed_interval" value="20" onchange="rebuild_all()"
-                   checked>
-            <label for="allowed_interval_20">20-as számkör</label>
-          </div>
-
-          <div>
-            <input type="radio" id="allowed_interval_100_beginner" name="allowed_interval" value="100-beginner" onchange="rebuild_all()">
-            <label for="allowed_interval_100_beginner">100-as számkör, második operandus 10 alatt</label>
-          </div>
-
-          <div>
-            <input type="radio" id="allowed_interval_100" name="allowed_interval" value="100" onchange="rebuild_all()">
-            <label for="allowed_interval_100">100-as számkör</label>
-          </div>
-        </fieldset>
-      </tr>
       <tr>
         <th class="settings">
           <label for="add_10crossings_ratio">Tízes átlépések aránya az összeadásokban: &nbsp;</label>
