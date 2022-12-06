@@ -21,11 +21,17 @@
       border-spacing: 0.5em 0;
     }
 
+    table.columns {
+      border-collapse: separate;
+      border-right: 15em;
+    }
+
+
     th,
     td {
       border: none;
       /* 1px solid; */
-      font-size: 18pt;
+      font-size: 14pt;
       font-family: Arial;
       height: 28pt;
     }
@@ -92,7 +98,7 @@
         if (this.random_missing_operand) {
           missing_pos = rando([0,2,4]).value;
         }
-        op[missing_pos] = "___";
+        op[missing_pos] = "__";
         return op;
       }
     }
@@ -272,18 +278,18 @@
   </div>
 
 
-  <table id='exercises'>
+  <table class='columns' id='exercises'>
     <tr>
-      <td>
+      <td class='columns'>
         <table id='exercises_1' class='exercises'></table>
       </td>
-      <td>
+      <td class='columns'>
         <table id='exercises_2' class='exercises'></table>
       </td>
-      <td>
+      <td class='columns'>
         <table id='exercises_3' class='exercises'></table>
       </td>
-      <td>
+      <td class='columns'>
         <table id='exercises_4' class='exercises'></table>
       </td>
     </tr>
