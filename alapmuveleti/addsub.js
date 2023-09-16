@@ -12,6 +12,9 @@ function precompute_add_sub_operands() {
     for (c = 2 * min_num; c <= max_num; c++) {
         for (a = min_num; a <= c - min_num; a++) {
             b = c - a;
+            if (b > max_2nd_operand) {
+                continue
+            } 
             // count things like 20-13 as a "10 crossing" (although it is technically not)
             if ((max_num == 20) && (c == 20) && (a > 10)) {
                 crossing_10s.push({ a, b, c });
@@ -27,7 +30,7 @@ function precompute_add_sub_operands() {
     }
 }
 
-// returns the elements of a sequence in a random order 
+// returns the elements of a sequence in random order 
 class InRandomOrder {
     constructor(sequence) {
         this.sequence = randoSequence(sequence);
@@ -49,19 +52,13 @@ class AddSub {
         this.crossing_10_ratio = get_float_input(this.short_name + "_10crossings_ratio") / 100.0;
     }
 
-    filter(a, b, c) {
-        return true
-    }
-
     // returns the next random operation
-    next() {
-        do {
-            if (Math.random() < this.crossing_10_ratio) {
-                var { a, b, c } = this.operands_crossing_10.next();
-            } else {
-                var { a, b, c } = this.operands_not_crossing_10.next();
-            }
-        } while (!this.filter(a, b, c));
+    next(_) {
+        if (Math.random() < this.crossing_10_ratio) {
+            var { a, b, c } = this.operands_crossing_10.next();
+        } else {
+            var { a, b, c } = this.operands_not_crossing_10.next();
+        }
         return this.render(a, b, c);
     }
 }
@@ -72,23 +69,14 @@ class Addition extends AddSub {
         return [a, '+', b, '=', c];
     }
 
-    filter(a, b, c) {
-        return b <= max_2nd_operand;
-    }
-
     get short_name() { return "add"; }
 }
 
 // Generates random substractions
 class Subtraction extends AddSub {
     render(a, b, c) {
-        return [c, '-', a, '=', b];
+        return [c, '-', b, '=', a];
     }
-
-    filter(a, b, c) {
-        return a <= max_2nd_operand;
-    }
-
 
     get short_name() { return "sub"; }
 }

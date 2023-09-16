@@ -4,220 +4,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="styles.css">
   <title>Alapműveleti teszt</title>
-  <style>
-    table {
-      border: none;
-      border-collapse: collapse;
-      table-layout: fixed;
-      width: 100%;
-/*      margin-top: 0.1cm;*/
-      /*margin: 1cm;*/
-    }
-
-    table.exercises {
-      width: auto;
-/*      border: 1px solid red;*/
-    }
-
-    table.exercises td {
-      padding-right: 0.3em;
-      text-align: right;
-    }
-
-    td.columns {
-/*      border-right: 1px solid black;*/
-    }
-
-
-    th,
-    td {
-      border: none;
-      /* 1px solid; */
-      font-size: 16pt;
-      font-family: Arial;
-      height: 28pt;
-    }
-
-    @media screen {
-
-      .settings {
-        font-size: 14pt;
-        font-family: Arial;
-        margin: 0;
-      }
-
-      div.settings {
-        border: 1px solid;
-        padding: 10px;
-      }
-
-      table.settings td,
-      th {
-        height: auto;
-        text-align: left;
-        font-size: 14pt;
-        font-family: Arial;
-      }
-
-    }
-
-    @media print {
-      .settings {
-        display: none;
-      }
-    }
-  </style>
   <script src="randojs.2.0.0.js"></script>
   <script>
     const min_num = 2;
     var max_num = 20;
     var max_2nd_operand = max_num;
+
+    const min_mul_operand = 2;
+    const max_mul_operand = 10;
+    var mul_tables = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];    
+    
     const column_cnt = 4;
   </script>
   <script src="save.js"></script>
   <script src="addsub.js"></script>
-  <script>
-
-    // Generates the next random operation in a column
-    class Column {
-      constructor(x, all_op_generators) {
-        this.op_generators = all_op_generators.filter(
-          op => {
-            return get_bool_input(`${op.short_name}_${x + 1}`);
-          }
-        );
-
-        if (0 == this.op_generators.length) {
-          this.op_generators = all_op_generators.slice();
-        }
-
-        this.random_missing_operand = get_bool_input(`random_missing_operand_${x + 1}`);
-      }
-
-      next() {
-        let op = rando(this.op_generators).value.next();
-        let missing_pos = 4;
-        if (this.random_missing_operand) {
-          missing_pos = rando([0,2,4]).value;
-        }
-        op[missing_pos] = "__";
-        return op;
-      }
-    }
-
-    function rebuild_all() {
-      let interval = get_radiobutton_value("allowed_interval");
-      switch (interval) {
-        case "100-beginner": {
-          max_num = 100;
-          max_2nd_operand = 9;
-          break;
-        } 
-        case "100": {
-          max_num = 100;
-          max_2nd_operand = max_num;
-          break;
-        }
-        case "20": {
-          max_num = 20;
-          max_2nd_operand = max_num;
-          break;
-        }
-        default:
-          max_num = 10;
-          max_2nd_operand = max_num;
-          console.error("Invalid allowed_interval (szamkor) value:", interval);
-          break;
-      }
-      precompute_add_sub_operands();
-      rebuild_table();
-    }
-
-
-    function rebuild_table() {
-      // create a generator for all valid operations
-      var op_generators = [
-        new Addition(),
-        new Subtraction()
-      ];
-
-      // collect operation generators for each column
-      let columns = [];
-      for (let x = 0; x < column_cnt; x++) {
-        columns.push(new Column(x, op_generators));
-      }
-
-      // save settings to cookie
-      // NOTE: the lines above can actually modify the settings
-      save_settings();
-
-      // rewrite the table of exercises
-      for (let x = 0; x < column_cnt; x++) {
-        var tbl = document.getElementById(`exercises_${x + 1}`);
-        tbl.innerHTML = '';
-        for (let y = 0; y < 25; y++) {
-          const tr = tbl.insertRow();
-          parts = columns[x].next();
-          for (const part of parts) { 
-            const td = tr.insertCell();
-            td.appendChild(document.createTextNode(part));
-          }
-        }
-      }
-    }
-
-    function build_settings() {
-
-      var tbl = document.getElementById('per_column_settings');
-      tbl.innerHTML = `
-      <tr>
-        <th colspan="${column_cnt}" style="padding-bottom: 10px;padding-top: 15px;">Művelettípusok kiválasztása oszloponként
-          (egyszerre több is választható):
-        </th>
-      </tr>
-`;
-      const tr = tbl.insertRow();
-      for (let x = 1; x <= column_cnt; x++) {
-        const td = tr.insertCell();
-        td.innerHTML = `
-          <table class="settings">
-            <tr>
-              <td>
-                <input type="checkbox" id="add_${x}" name="add_${x}" checked="true" onclick="rebuild_table()" />
-                <label for="add_${x}">Összeadás</label>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <input type="checkbox" id="sub_${x}" name="sub_${x}" checked="true" onclick="rebuild_table()" />
-                <label for="sub_${x}">Kivonás</label>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <input type="checkbox" id="mul_${x}" name="mul_${x}" disabled="true" />
-                <label for="mul_${x}">Szorzás</label>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <input type="checkbox" id="div_${x}" name="div_${x}" disabled="true" />
-                <label for="div_${x}">Osztás</label>
-              </td>
-            </tr>
-          </table>
-          <div>
-            <input type="checkbox" id="random_missing_operand_${x}" name="random_missing_operand_${x}" onclick="rebuild_table()" />
-            <label for="random_missing_operand_${x}">Kitöltendő hely véletlenszerű pozícióban</label>
-          </div>
-`;
-      }
-    }
-  </script>
+  <script src="muldiv.js"></script>
+  <script src="columns.js"></script>
 </head>
 
-<body onload="build_settings(); load_settings(); rebuild_all();">
+<body onload="build_column_settings(); load_settings(); rebuild_all();">
   <div class="settings">
     <p>Az alábbi beállításokkal tudod befolyásolni, hogy milyen teszt készüljön. Ha a beállítások megvátoztatása után
       nem készít magától új feladatlapot, akkor nyomd meg az "Újat kérek!" gombot.<br />

@@ -1,0 +1,61 @@
+    table {
+      border: none;
+      border-collapse: collapse;
+      table-layout: fixed;
+      width: 100%;
+/*      margin-top: 0.1cm;*/
+      /*margin: 1cm;*/
+    }
+
+    table.exercises {
+      width: auto;
+/*      border: 1px solid red;*/
+    }
+
+    table.exercises td {
+      padding-right: 0.3em;
+      text-align: right;
+    }
+
+    td.columns {
+/*      border-right: 1px solid black;*/
+    }
+
+
+    th,
+    td {
+      border: none;
+      /* 1px solid; */
+      font-size: 16pt;
+      font-family: Arial;
+      height: 28pt;
+    }
+
+    @media screen {
+
+      .settings {
+        font-size: 14pt;
+        font-family: Arial;
+        margin: 0;
+      }
+
+      div.settings {
+        border: 1px solid;
+        padding: 10px;
+      }
+
+      table.settings td,
+      th {
+        height: auto;
+        text-align: left;
+        font-size: 14pt;
+        font-family: Arial;
+      }
+
+    }
+
+    @media print {
+      .settings {
+        display: none;
+      }
+    }
