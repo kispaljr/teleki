@@ -27,7 +27,7 @@ class Column {
 }
 
 function rebuild_all() {
-    let interval = get_radiobutton_value("allowed_interval");
+    let interval = get_radiobutton_value("allowed_numberset");
     switch (interval) {
         case "100-beginner": {
             max_num = 100;
@@ -45,9 +45,9 @@ function rebuild_all() {
             break;
         }
         default:
-            max_num = 10;
+            max_num = 20;
             max_2nd_operand = max_num;
-            console.error("Invalid allowed_interval (szamkor) value:", interval);
+            console.error("Invalid allowed_numberset (szamkor) value:", interval);
             break;
     }
     precompute_add_sub_operands();
@@ -91,48 +91,46 @@ function rebuild_table() {
 
 function build_column_settings() {
 
-    var tbl = document.getElementById('per_column_settings');
-    tbl.innerHTML = `
+    var column_settings_table = document.getElementById('per_column_settings');
+    column_settings_table.innerHTML = `
       <tr>
         <th colspan="${column_cnt}" style="padding-bottom: 10px;padding-top: 15px;">Művelettípusok kiválasztása oszloponként
           (egyszerre több is választható):
         </th>
-      </tr>
-`;
-    const tr = tbl.insertRow();
+      </tr>`;
+
+    const settings = [
+        { "id": "add", "label": "Összeadás" },
+        { "id": "sub", "label": "Kivonás" },
+        { "id": "mul", "label": "Szorzás" },
+        { "id": "div", "label": "Osztás" },
+        { "id": "random_missing_operand", "label": "Kitöltendő hely véletlenszerű pozícióban" }
+    ];
+
+    const tr = column_settings_table.insertRow();
     for (let x = 1; x <= column_cnt; x++) {
         const td = tr.insertCell();
-        td.innerHTML = `
-          <table class="settings">
+        let rows = "";
+        for (const setting of settings) {
+            rows += `
             <tr>
               <td>
-                <input type="checkbox" id="add_${x}" name="add_${x}" checked="true" onclick="rebuild_table()" />
-                <label for="add_${x}">Összeadás</label>
+                <input type="checkbox" id="${setting.id}_${x}" name="${setting.id}_${x}" checked="true" onclick="rebuild_table()" />
+                <label for="${setting.id}_${x}">${setting.label}</label>
               </td>
-            </tr>
-            <tr>
-              <td>
-                <input type="checkbox" id="sub_${x}" name="sub_${x}" checked="true" onclick="rebuild_table()" />
-                <label for="sub_${x}">Kivonás</label>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <input type="checkbox" id="mul_${x}" name="mul_${x}" checked="true" onclick="rebuild_table()" />
-                <label for="mul_${x}">Szorzás</label>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <input type="checkbox" id="div_${x}" name="div_${x}" checked="true" onclick="rebuild_table()" />
-                <label for="div_${x}">Osztás</label>
-              </td>
-            </tr>
-          </table>
-          <div>
-            <input type="checkbox" id="random_missing_operand_${x}" name="random_missing_operand_${x}" onclick="rebuild_table()" />
-            <label for="random_missing_operand_${x}">Kitöltendő hely véletlenszerű pozícióban</label>
-          </div>
-`;
+            </tr>`;
+        }
+        td.innerHTML = `<table class="settings">${rows}</table>`;
     }
+
+
+    var multable_settings_div = document.getElementById('multable_settings');
+    let multable_inputs = "";
+    for (let x = 0; x <= 9; x++) {
+        multable_inputs += `
+            <input type="checkbox" id="mul_table_${x}" name="mul_table_${x}" checked="true" onclick="rebuild_table()" />
+            <label for="mul_table_${x}">${x}</label>`
+    }
+    multable_settings_div.innerHTML = multable_inputs;
+
 }

@@ -1,9 +1,5 @@
 
 
-
-
-
-
 // Common base class for generating random multiplications and divisions
 class MulDiv {
     constructor() {

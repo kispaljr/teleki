@@ -1,20 +1,21 @@
-// TODO: save/load: allowed_interval
-// TODO: save/load: random empty place options
-
 var cookie_expiry = new Date(new Date().getTime() + 10 * 365 * 24 * 3600 * 1000);
 
 
 // iterator of all the valid "setting" input field IDs
-function* field_names() {
+function* input_field_names() {
+
+  // addition & subtraction
+  yield "allowed_numberset";
   for (let op of ["add", "sub"]) {
     yield `${op}_10crossings_ratio`;
   }
+
+  // column settings
   for (let op of ["add", "sub", "mul", "div", "random_missing_operand"]) {
     for (let x = 1; x <= column_cnt; x++) {
       yield `${op}_${x}`;
     }
   }
-  yield "allowed_interval";
 }
 
 
@@ -29,7 +30,7 @@ function save_field(name) {
     field_value = get_radiobutton_value(name);
   }
   else {
-    field_value = escape(element.value);
+    field_value = encodeURIComponent(element.value);
   }
   document.cookie = `${name}=${field_value}; expires=${cookie_expiry.toGMTString()}`;
 }
@@ -54,7 +55,7 @@ function load_field(name) {
 
 // save all settings to cookie
 function save_settings() {
-  for (let field of field_names()) {
+  for (let field of input_field_names()) {
     save_field(field);
   }
   // console.log("cookie: " + document.cookie);      
@@ -62,7 +63,7 @@ function save_settings() {
 
 // load all settings from cookie
 function load_settings() {
-  for (let field of field_names()) {
+  for (let field of input_field_names()) {
     load_field(field);
   }
 }

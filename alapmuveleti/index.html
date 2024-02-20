@@ -14,8 +14,8 @@
 
     const min_mul_operand = 2;
     const max_mul_operand = 10;
-    var mul_tables = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];    
-    
+    var mul_tables = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
     const column_cnt = 4;
   </script>
   <script src="save.js"></script>
@@ -37,26 +37,28 @@
     </p>
 
     <p>
-      <fieldset>
-        <legend>Számkör:</legend>
+    <fieldset>
+      <legend>Összeadás/kivonás számkör:</legend>
 
-        <div>
-          <input type="radio" id="allowed_interval_20" name="allowed_interval" value="20" onchange="rebuild_all()"
-                 checked>
-          <label for="allowed_interval_20">20-as számkör</label>
-        </div>
+      <div>
+        <input type="radio" id="allowed_numberset_20" name="allowed_numberset" value="20" onchange="rebuild_all()"
+          checked>
+        <label for="allowed_numberset_20">20-as számkör</label>
+      </div>
 
-        <div>
-          <input type="radio" id="allowed_interval_100_beginner" name="allowed_interval" value="100-beginner" onchange="rebuild_all()">
-          <label for="allowed_interval_100_beginner">100-as számkör, második operandus 10 alatt</label>
-        </div>
+      <div>
+        <input type="radio" id="allowed_numberset_100_beginner" name="allowed_numberset" value="100-beginner"
+          onchange="rebuild_all()">
+        <label for="allowed_numberset_100_beginner">100-as számkör, második operandus 10 alatt</label>
+      </div>
 
-        <div>
-          <input type="radio" id="allowed_interval_100" name="allowed_interval" value="100" onchange="rebuild_all()">
-          <label for="allowed_interval_100">100-as számkör</label>
-        </div>
-      </fieldset>
+      <div>
+        <input type="radio" id="allowed_numberset_100" name="allowed_numberset" value="100" onchange="rebuild_all()">
+        <label for="allowed_numberset_100">100-as számkör</label>
+      </div>
+    </fieldset>
     </p>
+    <p>
     <table class="settings" style="width: auto;">
       <tr>
         <th class="settings">
@@ -83,7 +85,13 @@
         </td>
       </tr>
     </table>
-
+    </p>
+    <p>
+    <fieldset class="settings">
+      <legend>Tanult szorzótáblák:</legend>
+      <div id="multable_settings"></div>
+    </fieldset>
+    </p>
     <table id="per_column_settings" class="settings"> </table>
   </div>
 
