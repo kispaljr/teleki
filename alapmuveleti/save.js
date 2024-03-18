@@ -16,6 +16,10 @@ function* input_field_names() {
       yield `${op}_${x}`;
     }
   }
+
+  for (let x = min_mul_operand; x <= max_mul_operand; x++) {
+    yield `mul_table_${x}`;
+  }
 }
 
 
