@@ -50,6 +50,13 @@ function rebuild_all() {
             console.error("Invalid allowed_numberset (szamkor) value:", interval);
             break;
     }
+
+    mul_tables = []
+    for (let x = min_mul_operand; x <= max_mul_operand; x++) {
+        if (get_bool_input(`mul_table_${x}`)) {
+            mul_tables.push(x)
+        }
+    }
     precompute_add_sub_operands();
     rebuild_table();
 }
@@ -100,11 +107,11 @@ function build_column_settings() {
       </tr>`;
 
     const settings = [
-        { "id": "add", "label": "Összeadás" },
-        { "id": "sub", "label": "Kivonás" },
-        { "id": "mul", "label": "Szorzás" },
-        { "id": "div", "label": "Osztás" },
-        { "id": "random_missing_operand", "label": "Kitöltendő hely véletlenszerű pozícióban" }
+        { "id": "add", "label": "Összeadás", "checked": [1]},
+        { "id": "sub", "label": "Kivonás"  , "checked": [2]},
+        { "id": "mul", "label": "Szorzás"  , "checked": [3]},
+        { "id": "div", "label": "Osztás"   , "checked": [4]},
+        { "id": "random_missing_operand", "label": "Kitöltendő hely véletlenszerű pozícióban", "checked": [] }
     ];
 
     const tr = column_settings_table.insertRow();
@@ -115,7 +122,7 @@ function build_column_settings() {
             rows += `
             <tr>
               <td>
-                <input type="checkbox" id="${setting.id}_${x}" name="${setting.id}_${x}" checked="true" onclick="rebuild_table()" />
+                <input type="checkbox" id="${setting.id}_${x}" name="${setting.id}_${x}" ${setting.checked.includes(x) ? "checked=\"true\"" : "" } onclick="rebuild_all()" />
                 <label for="${setting.id}_${x}">${setting.label}</label>
               </td>
             </tr>`;
@@ -126,9 +133,9 @@ function build_column_settings() {
 
     var multable_settings_div = document.getElementById('multable_settings');
     let multable_inputs = "";
-    for (let x = 0; x <= 9; x++) {
+    for (let x = min_mul_operand; x <= max_mul_operand; x++) {
         multable_inputs += `
-            <input type="checkbox" id="mul_table_${x}" name="mul_table_${x}" checked="true" onclick="rebuild_table()" />
+            <input type="checkbox" id="mul_table_${x}" name="mul_table_${x}" ${x < 2 ? "" : "checked=\"true\""} onclick="rebuild_all()" />
             <label for="mul_table_${x}">${x}</label>`
     }
     multable_settings_div.innerHTML = multable_inputs;
