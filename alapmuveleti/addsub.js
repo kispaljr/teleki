@@ -1,7 +1,7 @@
 var crossing_10s = [];
 var not_crossing_10s = [];
 
-// NOTE: the number of all possible operations is quite small (if max_num == 20, then 231 for all possibilities, and only 190: if you exclude 0 and 1)
+// NOTE: the number of all possible operations is quite small (if max_num == 20, then 231 for all possibilities)
 // this makes pregenerating all possible combinations viable
 function precompute_add_sub_operands() {
     // a,b,c, so that: min_num <= a, b <= c <= max_num and a + b = c
@@ -54,11 +54,15 @@ class AddSub {
 
     // returns the next random operation
     next(_) {
-        if (Math.random() < this.crossing_10_ratio) {
-            var { a, b, c } = this.operands_crossing_10.next();
-        } else {
-            var { a, b, c } = this.operands_not_crossing_10.next();
+        let use_crossing = Math.random() < this.crossing_10_ratio;
+        if (use_crossing && crossing_10s.length === 0) {
+            use_crossing = false;
+        } else if (!use_crossing && not_crossing_10s.length === 0) {
+            use_crossing = true;
         }
+        var { a, b, c } = use_crossing
+            ? this.operands_crossing_10.next()
+            : this.operands_not_crossing_10.next();
         return this.render(a, b, c);
     }
 }
