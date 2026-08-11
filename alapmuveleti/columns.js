@@ -29,6 +29,11 @@ class Column {
 function rebuild_all() {
     let interval = get_radiobutton_value("allowed_numberset");
     switch (interval) {
+        case "10": {
+            max_num = 10;
+            max_2nd_operand = 9;
+            break;
+        }
         case "100-beginner": {
             max_num = 100;
             max_2nd_operand = 9;
