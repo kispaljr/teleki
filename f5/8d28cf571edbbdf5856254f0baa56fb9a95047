@@ -1,0 +1,21 @@
+alapmuveleti/styles.css
+  s_a44685c7455e15::t_06dce4970dd160 30,38,52
+alapmuveleti/index.html
+  s_a44685c7455e15::t_fa1b034d8be179 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f58d28cf571edbbdf5856254f0baa56fb9a95047",
+  "prompts": {},
+  "sessions": {
+    "s_a44685c7455e15": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "376ec9df-ed55-4f4b-91b5-bef1e09f5bdd",
+        "model": "grok-4.7"
+      },
+      "human_author": "Istvan Kispal <istvan.kispal@nokia.com>"
+    }
+  }
+}
